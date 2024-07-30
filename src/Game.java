@@ -27,6 +27,18 @@ public class Game
       universeCreated = false;
    }
 
+   public Game(ArrayList<Universe> universes, Main.players turn, int oScore, int xScore, int activeUniverse, int lastMoveX, int lastMoveY, Main.players lastMoveTurn, boolean universeCreated) {
+      this.universes = universes;
+      this.turn = turn;
+      this.oScore = oScore;
+      this.xScore = xScore;
+      this.activeUniverse = activeUniverse;
+      this.lastMoveX = lastMoveX;
+      this.lastMoveY = lastMoveY;
+      this.lastMoveTurn = lastMoveTurn;
+      this.universeCreated = universeCreated;
+   }
+
    public ArrayList<Universe> getAllUniverses() {
       return universes;
    }
@@ -53,7 +65,7 @@ public class Game
       return universes.get(ind);
    }
 
-   public void move(int x, int y) {
+   public int move(int x, int y) {
       int middleInd = ((Constants.UNIVERSE_SIZE * Constants.UNIVERSE_SIZE - 1) / 2);
       int reflectedInd = 2 * middleInd - (x * Constants.UNIVERSE_SIZE + y);
       int reflectedX = reflectedInd / Constants.UNIVERSE_SIZE;
@@ -113,15 +125,11 @@ public class Game
          turn = Main.players.X;
       }
 
-      if (gameOver()) {
-         System.out.println("GAME OVER");
-      }
-
       universeCreated = false;
 
       if (Constants.PLAY_RANDOM && turn == Main.players.O) {
-         int m = (int) (Math.random() * 10);
-         while (m == 9) {
+         int m = (int) (Math.random() * 15);
+         while (m >= 9) {
             createNewUniverse();
             m = (int) (Math.random() * 10);
          }
@@ -135,6 +143,12 @@ public class Game
          }
          move(a, b);
       }
+
+      if (gameOver()) {
+         System.out.println("GAME OVER");
+      }
+
+      return 0;
    }
 
    public Universe getActiveUniverse() {
@@ -146,13 +160,24 @@ public class Game
    }
 
    public void createNewUniverse() {
-      if (!universeCreated) {
-         Universe u = new Universe();
-         if (lastMoveX != -1) {
-            u.move(lastMoveX, lastMoveY, lastMoveTurn);
+      if (!gameOver())
+      {
+         if (!universeCreated)
+         {
+            if (getNumUniverses() >= Constants.NUM_MAX_UNIVERSES)
+            {
+               if (getUniverse(0).filled()) {
+                  removeUniverse(0);
+               }
+            }
+            Universe u = new Universe();
+            if (lastMoveX != -1)
+            {
+               u.move(lastMoveX, lastMoveY, lastMoveTurn);
+            }
+            universes.add(u);
+            universeCreated = true;
          }
-         universes.add(u);
-         universeCreated = true;
       }
    }
 
@@ -175,5 +200,25 @@ public class Game
 
    public int getOScore() {
       return oScore;
+   }
+
+   public void removeUniverse(int ind) {
+      universes.remove(ind);
+      if (ind < activeUniverse) {
+         activeUniverse--;
+      }
+   }
+
+   public String getXOScoresAsString() {
+      return "X: " + getXScore() + ", O: " + getOScore();
+   }
+
+   public Game clone() {
+      ArrayList<Universe> unis = new ArrayList<Universe>();
+      for (Universe i : universes) {
+         unis.add(i.clone());
+      }
+
+      return new Game(unis, turn, oScore, xScore, activeUniverse, lastMoveX, lastMoveY, lastMoveTurn, universeCreated);
    }
 }

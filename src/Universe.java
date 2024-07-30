@@ -20,8 +20,18 @@ public class Universe
       tied = false;
    }
 
+   public Universe(Main.players[][] universe, Main.players winner, boolean tied) {
+      this.universe = universe;
+      this.winner = winner;
+      this.tied = tied;
+   }
+
    public Main.players getSquare(int x, int y) {
       return universe[x][y];
+   }
+
+   public int[] getDimensions() {
+      return new int[] {universe.length, universe[0].length};
    }
 
    public boolean move(int x, int y, Main.players p) {
@@ -114,5 +124,17 @@ public class Universe
 
    public Main.players getWinner() {
       return winner;
+   }
+
+   public Universe clone() {
+      Main.players[][] uni = new Main.players[Constants.UNIVERSE_SIZE][Constants.UNIVERSE_SIZE];
+      int x = getDimensions()[0];
+      int y = getDimensions()[1];
+      for (int i = 0; i < x; i++) {
+         for (int j = 0; j < y; j++) {
+            uni[i][j] =  universe[i][j];
+         }
+      }
+      return new Universe(uni, winner, tied);
    }
 }
