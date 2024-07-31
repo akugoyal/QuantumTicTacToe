@@ -5,4 +5,6 @@ public class Constants
    public static final Main.players BEGINNING_PLAYER = Main.players.X;
    public static final boolean PLAY_RANDOM = false;
    public static final int NUM_MAX_UNIVERSES = 99;
+   public static final int MINIMAX_DEPTH = 6;
+   public static final boolean PLAY_MINIMAX = true;
 }

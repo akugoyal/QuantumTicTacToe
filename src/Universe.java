@@ -34,12 +34,24 @@ public class Universe
       return new int[] {universe.length, universe[0].length};
    }
 
-   public boolean move(int x, int y, Main.players p) {
+   /**
+    * returns 0 if collapsed, 2 if overridden, 1 if placed
+    * @param x
+    * @param y
+    * @param p
+    * @return
+    */
+   public int move(int x, int y, Main.players p) {
       if (universe[x][y] == p) {
-         return true;
+         return 0;
+      }
+      if (universe[x][y] != null)
+      {
+         universe[x][y] = p;
+         return (won()) ? 0 : 2;
       }
       universe[x][y] = p;
-      return false;
+      return 1;
    }
 
    public boolean updateWinner() {
@@ -126,10 +138,10 @@ public class Universe
       return winner;
    }
 
-   public Universe clone() {
-      Main.players[][] uni = new Main.players[Constants.UNIVERSE_SIZE][Constants.UNIVERSE_SIZE];
+   public Universe myClone() {
       int x = getDimensions()[0];
       int y = getDimensions()[1];
+      Main.players[][] uni = new Main.players[x][y];
       for (int i = 0; i < x; i++) {
          for (int j = 0; j < y; j++) {
             uni[i][j] =  universe[i][j];

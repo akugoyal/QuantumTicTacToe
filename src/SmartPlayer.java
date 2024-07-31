@@ -18,29 +18,46 @@ public class SmartPlayer
       futureGames.add(game);
    }
 
-   public ArrayList<int[]> getAllMoves(Game game) {
-      ArrayList<int[]> moves = new ArrayList<int[]>();
+   public ArrayList<Move> getAllMoves(Game game) {
+      ArrayList<int[]> m = new ArrayList<int[]>();
       for (int i = 0; i < Constants.UNIVERSE_SIZE; i++) {
          for (int j = 0; j < Constants.UNIVERSE_SIZE; j++) {
             if (game.getActiveUniverse().getSquare(i, j) == null) {
-               moves.add(new int[] {i, j});
+               m.add(new int[] {i, j});
             }
          }
       }
-      moves.add(new int[] {-1, -1});
+
+      ArrayList<Move> moves = new ArrayList<Move>();
+      for (int[] i : m) {
+         moves.add(new Move(i[0], i[1], false));
+         moves.add(new Move(i[0], i[1], true));
+      }
       return moves;
    }
 
-   public int[] nextMove() {
-      ArrayList<int[]> all = getAllMoves(currentGame);
+   public Move nextMove() {
+      ArrayList<Move> all = getAllMoves(currentGame);
+//      System.out.println("nexting");
+//      for (Move i : all)
+//      {
+//         System.out.println(i);
+//      }
       int[] scores = new int[all.size()];
 
       int max = Integer.MIN_VALUE;
       for (int i = 0; i < all.size(); i++)
       {
-         Game g = currentGame.clone();
-         int s = g.move(all.get(i)[0], all.get(i)[1]);
-         s += valueOfMeanestResponse(3, g);
+         Game g = currentGame.myClone();
+         Move m = all.get(i);
+         System.out.println("Move " + i + " - " + m);
+         if (m.getCreateNew()) {
+            g.createNewUniverse();
+         }
+         int s = g.move(m.getX(), m.getY(), true);
+         s += valueOfMeanestResponse(Constants.MINIMAX_DEPTH - 1, g);
+//         System.out.println(m);
+//         System.out.println(s);
          scores[i] = s;
          if (s > max)
          {
@@ -48,7 +65,9 @@ public class SmartPlayer
          }
       }
 
-      ArrayList<int[]> bestMoves = new ArrayList<int[]>();
+
+//      System.out.println(Arrays.toString(scores));
+      ArrayList<Move> bestMoves = new ArrayList<Move>();
       for (int i = 0; i < all.size(); i++)
       {
          if (scores[i] == max)
@@ -57,48 +76,65 @@ public class SmartPlayer
          }
       }
 
+      for (Move i : bestMoves)
+      {
+         System.out.println(i);
+      }
+      System.out.println();
       int ind = (int) (Math.random() * bestMoves.size());
       return bestMoves.get(ind);
+//      return new int[] {1, 1};
    }
 
    private int valueOfMeanestResponse(int moves, Game game)
    {
       if (moves <= 0)
       {
-         return score();
+         return 0;
       }
 
-      ArrayList<int[]> all = getAllMoves(game);
-
-      int worst = score();
+      ArrayList<Move> all = getAllMoves(game);
+//      System.out.println("moves: " + moves);
+      int worst = 0;
       for (Move i : all)
       {
-         getBoard().executeMove(i);
-         int s = valueOfBestMove(moves - 1);
-         worst = Integer.min(s, worst);
-         getBoard().undoMove(i);
+//         System.out.println(game.getTurn());
+         Game g = game.myClone();
+         if (i.getCreateNew()) {
+            g.createNewUniverse();
+         }
+         int s = g.move(i.getX(), i.getY(), true);
+         s += valueOfBestMove(moves - 1, g);
+         worst = Integer.max(s, worst);
+         System.out.println(i.toString() + s);
       }
 
-      return worst;
+      return -worst;
    }
 
-   private int valueOfBestMove(int moves)
+   private int valueOfBestMove(int moves, Game game)
    {
       if (moves <= 0)
       {
-         return score();
+         return 0;
       }
-      ArrayList<Move> all = getBoard().allMoves(getColor());
+      ArrayList<Move> all = getAllMoves(game);
+//      System.out.println("besting");
+
       int max = Integer.MIN_VALUE;
       for (int i = 0; i < all.size(); i++)
       {
-         getBoard().executeMove(all.get(i));
-         int s = valueOfMeanestResponse(moves - 1);
+         Game g = game.myClone();
+         Move m = all.get(i);
+         if (m.getCreateNew()) {
+            g.createNewUniverse();
+         }
+         int s = g.move(m.getX(), m.getY(), true);
+         s += valueOfMeanestResponse(moves - 1, g);
          if (s > max)
          {
             max = s;
          }
-         getBoard().undoMove(all.get(i));
       }
 
       return max;

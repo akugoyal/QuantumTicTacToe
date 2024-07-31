@@ -31,7 +31,7 @@ public class Display extends JComponent implements ActionListener
    public static final int ADDITIONAL_MESSAGE_WIDTH = 0;
    public static final int ADDITIONAL_MESSAGE_HEIGHT = 100;
    public static final int REFRESH_PERIOD = 100; //Window update rate in milliseconds
-   public static final int X_OFFSET = 150;
+   public static final int X_OFFSET = 300;
    public static final int Y_OFFSET = 0;
    public static final int BORDER_MARGIN = 10;
    public static final int GRID_MARGIN = 20;
@@ -262,7 +262,7 @@ public class Display extends JComponent implements ActionListener
          int ind = buttons.indexOf(button);
          int x = ind / Constants.UNIVERSE_SIZE;
          int y = ind % Constants.UNIVERSE_SIZE;
-         game.move(x, y);
+         game.move(x, y, false);
       }
 
       if (game.gameOver()) {

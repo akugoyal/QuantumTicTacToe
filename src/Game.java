@@ -2,7 +2,7 @@ import java.util.ArrayList;
 
 public class Game
 {
-   private static ArrayList<Universe> universes;
+   private ArrayList<Universe> universes;
    private Main.players turn;
    private int oScore;
    private int xScore;
@@ -65,19 +65,23 @@ public class Game
       return universes.get(ind);
    }
 
-   public int move(int x, int y) {
+   public int move(int x, int y, boolean minimaxxing) {
       int middleInd = ((Constants.UNIVERSE_SIZE * Constants.UNIVERSE_SIZE - 1) / 2);
       int reflectedInd = 2 * middleInd - (x * Constants.UNIVERSE_SIZE + y);
       int reflectedX = reflectedInd / Constants.UNIVERSE_SIZE;
       int reflectedY = reflectedInd % Constants.UNIVERSE_SIZE;
 
       boolean collapsed = false;
+      int score = 0;
       for (int i = getIndOfActiveUniverse(); i < getNumUniverses() - 1; i++) {
          if ((i - getIndOfActiveUniverse()) % 2 == 0) {
-            collapsed = getUniverse(i).move(x, y, turn);
-
+            int s = getUniverse(i).move(x, y, turn);
+            collapsed = s == 0;
+            score += s;
          } else {
-            collapsed = getUniverse(i).move(reflectedX, reflectedY, turn);
+            int s = getUniverse(i).move(reflectedX, reflectedY, turn);
+            collapsed = s == 0;
+            score += s;
          }
 
          if (collapsed) {
@@ -86,12 +90,12 @@ public class Game
       }
       if (!collapsed) {
          if ((getNumUniverses() - 2 - getIndOfActiveUniverse()) % 2 == 0) {
-            getUniverse(getNumUniverses() - 1).move(x, y, turn);
+            score += getUniverse(getNumUniverses() - 1).move(x, y, turn);
             lastMoveX = x;
             lastMoveY = y;
             lastMoveTurn = turn;
          } else {
-            getUniverse(getNumUniverses() - 1).move(reflectedX, reflectedY, turn);
+            score += getUniverse(getNumUniverses() - 1).move(reflectedX, reflectedY, turn);
             lastMoveX = reflectedX;
             lastMoveY = reflectedY;
             lastMoveTurn = turn;
@@ -101,6 +105,7 @@ public class Game
       oScore = 0;
       xScore = 0;
       for (Universe u : universes) {
+         boolean alrWon = u.won();
          u.updateWinner();
          if (u.won()) {
             if (u.getWinner() == Main.players.X) {
@@ -109,11 +114,14 @@ public class Game
                oScore++;
             }
          }
+         if (u.won() && !alrWon && u.getWinner() == Main.players.O) {
+            score += 3;
+         }
       }
 
-      System.out.println("X: " + xScore);
-      System.out.println("O: " + oScore);
-      System.out.println();
+//      System.out.println("X: " + xScore);
+//      System.out.println("O: " + oScore);
+//      System.out.println();
 
       while (!gameOver() && getActiveUniverse().filled()) {
          activeUniverse++;
@@ -141,14 +149,21 @@ public class Game
             a = m / Constants.UNIVERSE_SIZE;
             b = m % Constants.UNIVERSE_SIZE;
          }
-         move(a, b);
+         move(a, b, false);
+      } else if (Constants.PLAY_MINIMAX && turn == Main.players.O && !minimaxxing) {
+         SmartPlayer sp = new SmartPlayer(this);
+         Move m = sp.nextMove();
+         if (m.getCreateNew()) {
+            createNewUniverse();
+         }
+         move(m.getX(), m.getY(), false);
       }
 
       if (gameOver()) {
-         System.out.println("GAME OVER");
+//         System.out.println("GAME OVER");
       }
 
-      return 0;
+      return score;
    }
 
    public Universe getActiveUniverse() {
@@ -213,10 +228,10 @@ public class Game
       return "X: " + getXScore() + ", O: " + getOScore();
    }
 
-   public Game clone() {
+   public Game myClone() {
       ArrayList<Universe> unis = new ArrayList<Universe>();
       for (Universe i : universes) {
-         unis.add(i.clone());
+         unis.add(i.myClone());
       }
 
       return new Game(unis, turn, oScore, xScore, activeUniverse, lastMoveX, lastMoveY, lastMoveTurn, universeCreated);
